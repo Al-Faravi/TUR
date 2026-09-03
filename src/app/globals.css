@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  /* আমাদের প্রিমিয়াম কালার প্যালেট */
+  --color-brand: #0A6C3D;
+  --color-brand-dark: #074226;
+  --color-brand-deep: #0B3B24;
+  --color-brand-ink: #12291C;
+  --color-cream: #FAF7F0;
+  --color-gold: #D9A441;
+  --color-gold-light: #F0D48A;
+  --color-blood: #7A1E1E;
+  --color-footer-bg: #07271A;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); } /* একদম স্ক্রিন থেকেই শুরু হবে */
+  100% { transform: translateX(-50%); } /* অর্ধেক যাওয়ার পর আবার লুপ হবে */
+}
+.animate-marquee {
+  display: flex;
+  width: max-content; /* ভেতরের কনটেন্ট অনুযায়ী জায়গা নেবে */
+  animation: marquee 30s linear infinite; /* স্পিড 30s রাখা হলো */
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-brand-ink);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
