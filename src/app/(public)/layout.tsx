@@ -27,17 +27,16 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="bn" className={`scroll-smooth ${tiroBangla.variable} ${hindSiliguri.variable}`}>
-      <body className="bg-cream text-brand-ink font-sans flex flex-col min-h-screen">
-        <Navbar />
-        
-        {/* flex-grow দেওয়ার কারণে কন্টেন্ট ছোট হলেও ফুটার সবসময় নিচে থাকবে */}
-        <main className="flex-grow pt-20"> 
-          {children}
-        </main>
-        
-        <Footer /> {/* Footer যুক্ত করা হলো */}
-      </body>
-    </html>
+    // html এবং body ট্যাগের বদলে আমরা একটি div ব্যবহার করছি এবং ফন্টগুলো এর ভেতরে দিয়ে দিচ্ছি
+    <div className={`bg-cream text-brand-ink font-sans flex flex-col min-h-screen ${tiroBangla.variable} ${hindSiliguri.variable}`}>
+      <Navbar />
+      
+      {/* flex-grow দেওয়ার কারণে কন্টেন্ট ছোট হলেও ফুটার সবসময় নিচে থাকবে */}
+      <main className="flex-grow pt-20"> 
+        {children}
+      </main>
+      
+      <Footer /> {/* Footer যুক্ত করা হলো */}
+    </div>
   );
 }

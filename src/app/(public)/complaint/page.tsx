@@ -1,16 +1,105 @@
 "use client";
 import { useState } from 'react';
-import { ShieldCheck, EyeOff, FileText, Upload, AlertTriangle, Scale, Lock, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { ShieldCheck, EyeOff, FileText, Upload, AlertTriangle, Scale, Lock, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function ComplaintPage() {
-  // পরিচয় গোপনের জন্য স্টেট (State)
+  const router = useRouter();
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // ফর্মের স্টেট
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    category: '',
+    ward_no: '',
+    description: ''
+  });
+  
+  // ফাইল আপলোডের স্টেট
+  const [file, setFile] = useState<File | null>(null);
+
+  // ইনপুট হ্যান্ডলার
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // ফাইল হ্যান্ডলার
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      // সর্বোচ্চ 10MB চেক
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        alert("ফাইলের সাইজ ১০ মেগাবাইটের বেশি হতে পারবে না!");
+        return;
+      }
+      setFile(selectedFile);
+    }
+  };
+
+  // ফর্ম সাবমিট ফাংশন
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      let file_url = null;
+
+      // ১. যদি ফাইল থাকে, তবে সেটি Supabase Storage এ আপলোড করা
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `complaints/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('media') // নিশ্চিত করুন Supabase এ 'media' নামের একটি বাকেট আছে
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        // আপলোড হওয়া ফাইলের পাবলিক লিংক তৈরি করা
+        const { data: publicUrlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+
+        file_url = publicUrlData.publicUrl;
+      }
+
+      // ২. ডাটাবেসে (complaints টেবিল) ডাটা সেভ করা
+      const { error: dbError } = await supabase.from('complaints').insert([
+        {
+          name: isAnonymous ? 'পরিচয় গোপন' : formData.name,
+          phone: isAnonymous ? 'গোপন' : formData.phone,
+          category: formData.category,
+          ward_no: formData.ward_no,
+          description: formData.description,
+          file_url: file_url,
+          is_anonymous: isAnonymous,
+          status: 'pending'
+        }
+      ]);
+
+      if (dbError) throw dbError;
+
+      // সফল হলে অ্যালার্ট দিয়ে হোমপেজে পাঠিয়ে দেওয়া
+      alert("আপনার অভিযোগটি সফলভাবে জমা হয়েছে। ধন্যবাদ!");
+      router.push('/');
+
+    } catch (error: any) {
+      console.error("Error submitting complaint:", error.message);
+      alert("দুঃখিত, কোনো একটি সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-cream min-h-screen pb-20">
       
-      {/* 1. Page Header & Trust Building */}
+      {/* 1. Page Header */}
       <section className="bg-brand-deep text-white pt-24 pb-16 md:pt-32 md:pb-24 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-dark rounded-full blur-[80px] opacity-40 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
         
@@ -25,7 +114,6 @@ export default function ComplaintPage() {
           </p>
         </div>
         
-        {/* SVG Wave */}
         <svg className="absolute bottom-0 left-0 w-full h-8 md:h-16 text-cream" viewBox="0 0 1440 120" fill="currentColor" preserveAspectRatio="none">
           <path d="M0,64 L48,69.3 C96,75 192,85 288,80 C384,75 480,53 576,48 C672,43 768,53 864,69.3 C960,85 1056,107 1152,106.7 C1248,107 1344,85 1392,74.7 L1440,64 L1440,120 L0,120 Z"/>
         </svg>
@@ -80,7 +168,6 @@ export default function ComplaintPage() {
         {/* 3. The Main Complaint Form */}
         <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-xl border border-black/5 overflow-hidden">
           
-          {/* Form Header */}
           <div className="bg-brand-deep/5 px-6 py-5 md:px-10 md:py-6 border-b border-black/5 flex items-center justify-between">
             <h2 className="font-serif text-xl md:text-2xl font-bold text-brand flex items-center gap-2">
               <FileText size={24} /> অভিযোগ ফর্ম
@@ -101,43 +188,40 @@ export default function ComplaintPage() {
                 </div>
               </div>
               
-              {/* Custom Toggle UI */}
               <div className={`w-12 h-6 md:w-14 md:h-7 rounded-full relative transition-colors duration-300 ${isAnonymous ? 'bg-brand' : 'bg-gray-300'}`}>
                 <div className={`absolute top-1 left-1 w-4 h-4 md:w-5 md:h-5 rounded-full bg-white transition-transform duration-300 ${isAnonymous ? 'translate-x-6 md:translate-x-7' : 'translate-x-0'}`} />
               </div>
             </div>
 
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               
-              {/* Name & Phone (Hides smoothly if Anonymous is true) */}
               <div className={`grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-500 overflow-hidden ${isAnonymous ? 'opacity-0 h-0 m-0' : 'opacity-100 h-auto'}`}>
                 <div>
-                  <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">আপনার নাম <span className="text-blood">*</span></label>
-                  <input type="text" placeholder="সম্পূর্ণ নাম" className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm" />
+                  <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">আপনার নাম {isAnonymous ? '' : <span className="text-blood">*</span>}</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="সম্পূর্ণ নাম" className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm" required={!isAnonymous} />
                 </div>
                 <div>
-                  <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">মোবাইল নাম্বার <span className="text-blood">*</span></label>
-                  <input type="tel" placeholder="01XXXXXXXXX" className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm" />
+                  <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">মোবাইল নাম্বার {isAnonymous ? '' : <span className="text-blood">*</span>}</label>
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="01XXXXXXXXX" className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm" required={!isAnonymous} />
                 </div>
               </div>
 
-              {/* Category & Ward */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">অভিযোগের ধরন <span className="text-blood">*</span></label>
-                  <select className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm cursor-pointer">
+                  <select name="category" value={formData.category} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm cursor-pointer" required>
                     <option value="">নির্বাচন করুন</option>
-                    <option value="eve-teasing">ইভটিজিং ও নারী হয়রানি</option>
-                    <option value="extortion">চাঁদাবাজি ও দখলদারিত্ব</option>
-                    <option value="drugs">মাদক, কিশোর গ্যাং ও সন্ত্রাস</option>
-                    <option value="infrastructure">রাস্তাঘাট ও অবকাঠামো</option>
-                    <option value="health">স্বাস্থ্যসেবা ও হাসপাতাল</option>
-                    <option value="others">অন্যান্য সমস্যা</option>
+                    <option value="ইভটিজিং ও নারী হয়রানি">ইভটিজিং ও নারী হয়রানি</option>
+                    <option value="চাঁদাবাজি ও দখলদারিত্ব">চাঁদাবাজি ও দখলদারিত্ব</option>
+                    <option value="মাদক, কিশোর গ্যাং ও সন্ত্রাস">মাদক, কিশোর গ্যাং ও সন্ত্রাস</option>
+                    <option value="রাস্তাঘাট ও অবকাঠামো">রাস্তাঘাট ও অবকাঠামো</option>
+                    <option value="স্বাস্থ্যসেবা ও হাসপাতাল">স্বাস্থ্যসেবা ও হাসপাতাল</option>
+                    <option value="অন্যান্য সমস্যা">অন্যান্য সমস্যা</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">ওয়ার্ড নম্বর <span className="text-blood">*</span></label>
-                  <select className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm cursor-pointer">
+                  <select name="ward_no" value={formData.ward_no} onChange={handleInputChange} className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm cursor-pointer" required>
                     <option value="">নির্বাচন করুন</option>
                     {[1,2,3,4,5,6,7,8,9].map(num => (
                       <option key={num} value={num}>{num} নং ওয়ার্ড</option>
@@ -146,27 +230,38 @@ export default function ComplaintPage() {
                 </div>
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">বিস্তারিত বিবরণ <span className="text-blood">*</span></label>
-                <textarea rows={5} placeholder="ঘটনার স্থান, সময় এবং বিস্তারিত বিবরণ নির্ভয়ে লিখুন..." className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm resize-none" required></textarea>
+                <textarea name="description" value={formData.description} onChange={handleInputChange} rows={5} placeholder="ঘটনার স্থান, সময় এবং বিস্তারিত বিবরণ নির্ভয়ে লিখুন..." className="w-full px-4 py-3 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-sm resize-none" required></textarea>
               </div>
 
               {/* File Upload UI */}
               <div>
                 <label className="block text-[13px] md:text-sm font-bold text-brand-ink mb-1.5">প্রমাণ আপলোড করুন (ছবি/ভিডিও)</label>
-                <div className="w-full border-2 border-dashed border-black/15 rounded-xl bg-cream/30 hover:bg-cream/50 transition-colors py-8 flex flex-col items-center justify-center cursor-pointer group">
-                  <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-brand mb-3 group-hover:scale-110 transition-transform">
-                    <Upload size={20} />
-                  </div>
-                  <span className="text-sm font-bold text-brand-ink">ক্লিক করে ফাইল সিলেক্ট করুন</span>
-                  <span className="text-xs text-brand-ink/50 mt-1">সর্বোচ্চ ১০ মেগাবাইট (JPG, PNG, MP4)</span>
+                <div className="relative w-full border-2 border-dashed border-black/15 rounded-xl bg-cream/30 hover:bg-cream/50 transition-colors py-8 flex flex-col items-center justify-center cursor-pointer group">
+                  <input type="file" accept="image/*,video/*" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  
+                  {file ? (
+                    <div className="text-center text-brand font-bold text-sm">
+                      <p>✓ {file.name}</p>
+                      <p className="text-xs text-brand/60 mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center text-brand mb-3 group-hover:scale-110 transition-transform">
+                        <Upload size={20} />
+                      </div>
+                      <span className="text-sm font-bold text-brand-ink">ক্লিক করে ফাইল সিলেক্ট করুন</span>
+                      <span className="text-xs text-brand-ink/50 mt-1">সর্বোচ্চ ১০ মেগাবাইট (JPG, PNG, MP4)</span>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Submit Button */}
-              <button type="button" className="w-full bg-brand hover:bg-brand-dark text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl text-[15px] md:text-[16px] mt-4">
-                <ShieldCheck size={20} /> নিরাপদে অভিযোগ জমা দিন
+              <button disabled={loading} type="submit" className="w-full bg-brand hover:bg-brand-dark text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl text-[15px] md:text-[16px] mt-4 disabled:opacity-70 disabled:cursor-not-allowed">
+                {loading ? <Loader2 size={20} className="animate-spin" /> : <ShieldCheck size={20} />}
+                {loading ? 'জমা দেওয়া হচ্ছে...' : 'নিরাপদে অভিযোগ জমা দিন'}
               </button>
               
             </form>
