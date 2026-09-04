@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import '../globals.css';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer'; // Footer ইম্পোর্ট করা হলো
@@ -16,9 +17,27 @@ const hindSiliguri = Hind_Siliguri({
   variable: '--font-hind',
 });
 
-export const metadata = {
-  title: 'তাজ উদ্দিন রাসেদ | জননেতা, ৩নং চিথলিয়া ইউনিয়ন',
-  description: 'চিথলিয়া ইউনিয়নের উন্নয়নে তাজ উদ্দিন রাসেদের অঙ্গীকার ও কার্যক্রম।',
+// সম্পূর্ণ SEO এবং Open Graph মেটাডেটা
+export const metadata: Metadata = {
+  title: 'তাজ উদ্দিন রাশেদ | জননেতা, ৩নং চিথলিয়া ইউনিয়ন',
+  description: 'চিথলিয়া ইউনিয়নের উন্নয়নে তাজ উদ্দিন রাশেদের অঙ্গীকার ও কার্যক্রম।',
+  keywords: ['Taj Uddin Rashed', 'Chitholia Union', 'Feni', 'Politics', 'Social Worker', 'তাজ উদ্দিন রাশেদ'],
+  openGraph: {
+    title: 'তাজ উদ্দিন রাশেদ | অফিসিয়াল ওয়েবসাইট',
+    description: 'চিথলিয়া ইউনিয়নের উন্নয়ন ও মানুষের কল্যাণে নিবেদিত।',
+    url: 'https://taj-uddin-rashed.vercel.app',
+    siteName: 'Taj Uddin Rashed Portfolio',
+    images: [
+      {
+        url: 'https://taj-uddin-rashed.vercel.app/images/banner-1.png',
+        width: 1200,
+        height: 630,
+        alt: 'তাজ উদ্দিন রাশেদ - অফিসিয়াল ব্যানার',
+      },
+    ],
+    locale: 'bn_BD',
+    type: 'website',
+  },
 };
 
 export default function PublicLayout({
@@ -27,7 +46,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    // html এবং body ট্যাগের বদলে আমরা একটি div ব্যবহার করছি এবং ফন্টগুলো এর ভেতরে দিয়ে দিচ্ছি
+    // html এবং body ট্যাগের বদলে আমরা একটি div ব্যবহার করছি এবং ফন্টগুলো এর ভেতরে দিয়ে দিচ্ছি
     <div className={`bg-cream text-brand-ink font-sans flex flex-col min-h-screen ${tiroBangla.variable} ${hindSiliguri.variable}`}>
       <Navbar />
       
