@@ -9,6 +9,8 @@ import MediaGallery from '@/components/sections/MediaGallery';
 import Contact from '@/components/sections/Contact';
 import QuoteBand from '@/components/sections/QuoteBand'; // নতুন ইম্পোর্ট
 
+export const revalidate = 0;
+
 export default function HomePage() {
   return (
     <>

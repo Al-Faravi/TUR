@@ -3,6 +3,8 @@ import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import ActivitiesGridClient from '@/components/shared/ActivitiesGridClient';
 
+export const revalidate = 0;
+
 export default async function ActivitiesPage() {
   // সার্ভার সাইড ডাটা ফেচিং
   const { data, error } = await supabase
