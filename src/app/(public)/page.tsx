@@ -7,9 +7,10 @@ import Manifesto from '@/components/sections/Manifesto';
 import Activities from '@/components/sections/Activities';
 import MediaGallery from '@/components/sections/MediaGallery';
 import Contact from '@/components/sections/Contact';
-import QuoteBand from '@/components/sections/QuoteBand'; // নতুন ইম্পোর্ট
+import QuoteBand from '@/components/sections/QuoteBand';
 
-export const revalidate = 0;
+// পারফরম্যান্স ফাস্ট করার জন্য 0 পরিবর্তন করে 60 করা হলো (প্রতি ৬০ সেকেন্ডে ক্যাশ আপডেট হবে)
+export const revalidate = 60;
 
 export default function HomePage() {
   return (
@@ -22,10 +23,9 @@ export default function HomePage() {
       <Manifesto />
       <Activities />
       <MediaGallery />
-    <Contact />
-      {/* এখানে যুক্ত হলো */}
+      <Contact />
       
-      {/* স্ক্রল চেক করার জন্য ফাঁকা জায়গা */}
+      {/* স্ক্রল চেক করার জন্য ফাঁকা জায়গা */}
       <div className="h-[20vh] bg-cream"></div> 
     </>
   );

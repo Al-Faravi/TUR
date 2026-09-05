@@ -3,7 +3,8 @@ import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import ActivitiesGridClient from '@/components/shared/ActivitiesGridClient';
 
-export const revalidate = 0;
+// পারফরম্যান্স ফাস্ট করার জন্য 0 পরিবর্তন করে 60 করা হলো
+export const revalidate = 60;
 
 export default async function ActivitiesPage() {
   // সার্ভার সাইড ডাটা ফেচিং
