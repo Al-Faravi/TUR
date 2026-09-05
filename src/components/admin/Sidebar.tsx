@@ -1,16 +1,17 @@
 "use client";
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Inbox, Briefcase, Image as ImageIcon, Settings as SettingsIcon, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Inbox, Mail, Briefcase, Image as ImageIcon, Settings as SettingsIcon, LogOut, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-// onClose প্রপস নেওয়া হলো যা মোবাইল ভিউতে শাটার বন্ধ করবে
+// onClose প্রপস নেওয়া হলো যা মোবাইল ভিউতে শাটার বন্ধ করবে
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
 
   const menuItems = [
     { name: 'ড্যাশবোর্ড', icon: LayoutDashboard, href: '/dashboard' },
+    { name: 'ইনবক্স (বার্তা)', icon: Mail, href: '/dashboard/messages' }, // <-- নতুন যুক্ত করা হলো
     { name: 'অভিযোগ', icon: Inbox, href: '/dashboard/complaints' },
     { name: 'মাঠের কাজ', icon: Briefcase, href: '/dashboard/activities' }, 
     { name: 'গ্যালারি', icon: ImageIcon, href: '/dashboard/media' },

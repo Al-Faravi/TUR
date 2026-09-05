@@ -1,10 +1,54 @@
-import { Phone, MapPin, Mail, Send } from 'lucide-react';
+"use client";
+
+import { useState } from 'react';
+import { Phone, MapPin, Mail, Send, CheckCircle, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function Contact() {
+  const [formData, setFormData] = useState({ name: '', phone: '', message: '' });
+  const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    // বাংলাদেশি ফোন নাম্বার ভ্যালিডেশন (১১ ডিজিট এবং 01 দিয়ে শুরু)
+    const phoneRegex = /^(?:\+88|88)?(01[3-9]\d{8})$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setErrorMsg('অনুগ্রহ করে সঠিক ১১ ডিজিটের বাংলাদেশি মোবাইল নাম্বার দিন।');
+      return;
+    }
+
+    setLoading(true);
+
+    // Supabase-এ ডাটা পাঠানো
+    const { error } = await supabase
+      .from('contacts')
+      .insert([
+        { 
+          name: formData.name, 
+          phone: formData.phone, 
+          message: formData.message 
+        }
+      ]);
+
+    setLoading(false);
+
+    if (!error) {
+      setShowSuccess(true);
+      setFormData({ name: '', phone: '', message: '' }); // ফর্ম ক্লিয়ার করা
+      // ৫ সেকেন্ড পর পপআপ অটো বন্ধ হয়ে যাবে
+      setTimeout(() => setShowSuccess(false), 5000);
+    } else {
+      setErrorMsg('দুঃখিত, বার্তা পাঠাতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    }
+  };
+
   return (
-    // স্পেস কমানো হয়েছে: py-10 md:py-14
     <section id="contact" className="bg-cream py-10 md:py-14 scroll-mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         
         {/* Section Header */}
         <div className="max-w-2xl mx-auto text-center mb-8 md:mb-12">
@@ -23,13 +67,13 @@ export default function Contact() {
           </p>
         </div>
 
-        {/* 3-Column Compact Grid for PC, Stacked for Mobile */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+        {/* 3-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6 relative">
           
           {/* Column 1: Contact Information */}
           <div className="bg-white p-5 md:p-7 rounded-xl md:rounded-2xl shadow-sm border border-black/5 flex flex-col justify-center h-full">
             <h3 className="font-serif text-lg font-bold text-brand-ink mb-5 border-b border-black/5 pb-3">
-              তাজ উদ্দিন রাসেদ
+              তাজ উদ্দিন রাশেদ
             </h3>
             
             <div className="space-y-5">
@@ -71,38 +115,71 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Column 2: Compact Contact Form */}
-          <div className="bg-white p-5 md:p-7 rounded-xl md:rounded-2xl shadow-sm border border-black/5 h-full">
+          {/* Column 2: Contact Form */}
+          <div className="bg-white p-5 md:p-7 rounded-xl md:rounded-2xl shadow-sm border border-black/5 h-full relative overflow-hidden">
+            
+            {/* Success Overlay Modal */}
+            {showSuccess && (
+              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6 animate-in fade-in duration-300">
+                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3">
+                  <CheckCircle size={24} />
+                </div>
+                <h4 className="font-bold text-gray-900 text-lg mb-1">ধন্যবাদ!</h4>
+                <p className="text-gray-600 text-sm mb-4">আপনার বার্তা সফলভাবে প্রেরণ করা হয়েছে। আমরা শীঘ্রই যোগাযোগ করব।</p>
+                <button 
+                  onClick={() => setShowSuccess(false)}
+                  className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg text-sm transition-colors"
+                >
+                  বন্ধ করুন
+                </button>
+              </div>
+            )}
+
             <h3 className="font-serif text-lg font-bold text-brand-ink mb-4">সংক্ষিপ্ত বার্তা</h3>
-            <form className="space-y-3.5">
+            
+            {errorMsg && (
+              <div className="mb-3 p-2.5 bg-red-50 border border-red-100 text-red-600 text-xs font-semibold rounded-lg flex items-start gap-2">
+                <X size={14} className="mt-0.5 shrink-0" />
+                <p>{errorMsg}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-3.5">
               <input 
                 type="text" 
                 placeholder="আপনার নাম"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
                 className="w-full px-4 py-2.5 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-[13px] md:text-sm"
                 required
               />
               <input 
                 type="tel" 
-                placeholder="মোবাইল নাম্বার"
+                placeholder="মোবাইল নাম্বার (যেমন: 018...)"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value.replace(/[^0-9+]/g, '')})}
                 className="w-full px-4 py-2.5 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-[13px] md:text-sm"
                 required
               />
               <textarea 
                 rows={2}
                 placeholder="মতামত বা মেসেজ..."
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
                 className="w-full px-4 py-2.5 rounded-lg border border-black/10 bg-cream/30 focus:bg-white focus:border-brand outline-none transition-all text-[13px] md:text-sm resize-none"
                 required
               ></textarea>
               <button 
-                type="button" 
-                className="w-full bg-brand hover:bg-brand-dark text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm text-[13px] md:text-sm"
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-brand hover:bg-brand-dark disabled:bg-gray-400 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm text-[13px] md:text-sm"
               >
-                পাঠিয়ে দিন <Send size={14} />
+                {loading ? 'পাঠানো হচ্ছে...' : 'পাঠিয়ে দিন'} {!loading && <Send size={14} />}
               </button>
             </form>
           </div>
 
-          {/* Column 3: Google Maps Updated Location */}
+          {/* Column 3: Google Maps */}
           <div className="h-[250px] lg:h-full min-h-[250px] rounded-xl md:rounded-2xl overflow-hidden shadow-sm border border-black/5 relative group">
             <iframe 
               src="https://maps.google.com/maps?q=Shaldhar+Bazar,+Parshuram,+Feni&t=&z=15&ie=UTF8&iwloc=&output=embed"
