@@ -51,7 +51,7 @@ export default function MessagesAdminPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
+    return new Date(dateString).toLocaleDateString('bn-BD', { 
       year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
     });
   };
@@ -100,15 +100,6 @@ export default function MessagesAdminPage() {
 
                     <td className="p-4">
                       <p className="text-sm text-gray-600 line-clamp-2" title={item.message}>{item.message}</p>
-                      <button 
-                        onClick={() => {
-                          setViewModalData(item);
-                          if(item.status === 'unread') toggleStatus(item.id, 'unread'); // ওপেন করলেই Read হয়ে যাবে
-                        }}
-                        className="text-blue-600 hover:text-blue-800 text-[13px] font-bold mt-1.5 flex items-center gap-1"
-                      >
-                        <Eye size={14} /> বিস্তারিত পড়ুন
-                      </button>
                     </td>
 
                     <td className="p-4 text-sm text-gray-500 font-medium whitespace-nowrap">
@@ -127,7 +118,19 @@ export default function MessagesAdminPage() {
                       )}
                     </td>
 
+                    {/* === অ্যাকশন কলাম: View এবং Delete বাটন === */}
                     <td className="p-4 flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => {
+                          setViewModalData(item);
+                          if(item.status === 'unread') toggleStatus(item.id, 'unread'); // ওপেন করলেই Read হয়ে যাবে
+                        }}
+                        className="p-2 bg-white border border-gray-200 text-blue-600 hover:bg-blue-50 hover:border-blue-200 rounded-lg shadow-sm"
+                        title="বিস্তারিত দেখুন"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      
                       <button 
                         onClick={() => setDeleteConfirmId(item.id)}
                         className="p-2 bg-white border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200 rounded-lg shadow-sm"
@@ -153,25 +156,25 @@ export default function MessagesAdminPage() {
               <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2">
                 <Mail className="text-blue-600" size={20} /> বার্তার বিস্তারিত
               </h3>
-              <button onClick={() => setViewModalData(null)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-full">
+              <button onClick={() => setViewModalData(null)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
             <div className="p-6">
               <div className="mb-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
-                <p className="text-sm text-gray-500 mb-1">প্রেরক:</p>
+                <p className="text-sm text-gray-500 mb-1 font-semibold uppercase tracking-wider text-xs">প্রেরক:</p>
                 <p className="font-bold text-gray-900 text-lg">{viewModalData.name}</p>
                 <p className="font-semibold text-blue-600">{viewModalData.phone}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-2">মূল বার্তা:</p>
-                <div className="bg-gray-50 p-5 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap text-sm border border-gray-100">
+                <p className="text-sm text-gray-500 mb-2 font-semibold uppercase tracking-wider text-xs">মূল বার্তা:</p>
+                <div className="bg-gray-50 p-5 rounded-xl text-gray-700 leading-relaxed whitespace-pre-wrap text-sm border border-gray-100 shadow-inner">
                   {viewModalData.message}
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t border-gray-100 flex justify-end">
-              <button onClick={() => setViewModalData(null)} className="px-6 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900">
+            <div className="p-4 border-t border-gray-100 flex justify-end bg-gray-50">
+              <button onClick={() => setViewModalData(null)} className="px-6 py-2 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 shadow-sm transition-colors">
                 বন্ধ করুন
               </button>
             </div>
@@ -188,10 +191,10 @@ export default function MessagesAdminPage() {
                 <AlertTriangle size={32} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">মুছে ফেলতে চান?</h3>
-              <p className="text-sm text-gray-500 mb-6">এই বার্তাটি স্থায়ীভাবে মুছে যাবে।</p>
+              <p className="text-sm text-gray-500 mb-6">এই বার্তাটি স্থায়ীভাবে মুছে যাবে। এই কাজটি আর ফিরিয়ে আনা সম্ভব নয়।</p>
               <div className="flex gap-3">
-                <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-3 px-4 text-gray-700 font-bold bg-gray-100 rounded-xl">বাতিল</button>
-                <button onClick={handleDelete} className="flex-1 py-3 px-4 text-white font-bold bg-red-600 rounded-xl">হ্যাঁ, ডিলিট করুন</button>
+                <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-3 px-4 text-gray-700 font-bold bg-gray-100 hover:bg-gray-200 transition-colors rounded-xl">বাতিল</button>
+                <button onClick={handleDelete} className="flex-1 py-3 px-4 text-white font-bold bg-red-600 hover:bg-red-700 transition-colors rounded-xl shadow-md shadow-red-200">হ্যাঁ, ডিলিট করুন</button>
               </div>
             </div>
           </div>
